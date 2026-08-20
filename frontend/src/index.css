@@ -1,0 +1,32 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #0d9488;
+}
+
+* {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.active hr {
+  /* to apply underline on Link present in Navbar */
+  @apply block;
+}
+
+::-webkit-scrollbar {
+  @apply hidden;
+}
+
+@layer utilities {
+  /* custom grid */
+  .grid-cols-auto {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+}
+
+@media ( max-width:740px){
+  .active p{
+    @apply  text-white bg-primary
+  }
+}
