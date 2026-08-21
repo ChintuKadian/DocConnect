@@ -17,12 +17,6 @@ Book appointments seamlessly, empower doctors to manage their schedules, and ena
 ![Cloudinary](https://img.shields.io/badge/Cloudinary-Media-blue?style=for-the-badge)
 ![Razorpay](https://img.shields.io/badge/Razorpay-Payments-02042B?style=for-the-badge&logo=razorpay)
 
-<br>
-
-### 🌐 Live Demo
-
-https://prescripto-frontend-29f1.onrender.com/
-
 </div>
 
 ---
@@ -327,7 +321,7 @@ DocConnect/
 Clone the repository.
 
 ```bash
-git clone https://github.com/Shridhan15/Prescripto.git  
+git clone https://github.com/ChintuKadian/DocConnect.git
 ```
 
 Move inside the project.
@@ -568,15 +562,7 @@ validator
 
 # 🚀 Deployment
 
-The project has been deployed using **Render**.
-
-### Live Application
-
-```
-https://prescripto-frontend-29f1.onrender.com/
-```
-
-The backend and admin panel are deployed separately to enable independent scaling and maintenance.
+The project can be deployed to cloud hosting platforms such as Render, AWS, or Heroku.
 
 ---
 
@@ -763,18 +749,12 @@ Feel free to use, modify, and distribute this project for educational and person
 
 # 👨‍💻 Author
 
-## Shridhan Suman
+## Chintu Kadian
 
-**AI Full Stack Engineer**
+- 🎓 B.Tech CSE
+- 💼 Full Stack Web Developer
+- GitHub: [ChintuKadian](https://github.com/ChintuKadian)
 
-- 🎓 B.Tech CSE, VIT Chennai
-- 💼 Passionate about Full Stack Development, Artificial Intelligence, and Scalable Web Applications
-
-### Connect with me
-
-- GitHub: https://github.com/Shridhan15
-- LinkedIn: https://www.linkedin.com/in/shridhan-suman-3970a3293/
-- Portfolio: https://portfolio-chi-ecru-34.vercel.app/
 
 
 
