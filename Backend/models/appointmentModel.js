@@ -54,7 +54,10 @@ const appointmentModel = sequelize.define("Appointment", {
   },
   symptoms: {
     type: DataTypes.TEXT,
-    defaultValue: ""
+    allowNull: true,
+    get() {
+      return this.getDataValue('symptoms') || "";
+    }
   },
   preVisitSummary: {
     type: DataTypes.JSON,
@@ -62,7 +65,10 @@ const appointmentModel = sequelize.define("Appointment", {
   },
   notes: {
     type: DataTypes.TEXT,
-    defaultValue: ""
+    allowNull: true,
+    get() {
+      return this.getDataValue('notes') || "";
+    }
   },
   prescription: {
     type: DataTypes.JSON,
@@ -70,7 +76,10 @@ const appointmentModel = sequelize.define("Appointment", {
   },
   postVisitSummary: {
     type: DataTypes.TEXT,
-    defaultValue: ""
+    allowNull: true,
+    get() {
+      return this.getDataValue('postVisitSummary') || "";
+    }
   },
   googleCalendarEventId: {
     type: DataTypes.STRING,

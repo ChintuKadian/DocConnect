@@ -30,7 +30,10 @@ const emailQueueModel = sequelize.define("EmailQueue", {
   },
   lastError: {
     type: DataTypes.TEXT,
-    defaultValue: ""
+    allowNull: true,
+    get() {
+      return this.getDataValue('lastError') || "";
+    }
   },
   createdAt: {
     type: DataTypes.DATE,
