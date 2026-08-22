@@ -1,772 +1,355 @@
-<div align="center">
+# 🏥 DocConnect - Hospital & Appointment Platform
 
-# 🏥 DocConnect
-
-### A Full-Stack Healthcare Appointment & Hospital Management Platform
-
-Book appointments seamlessly, empower doctors to manage their schedules, and enable administrators to efficiently oversee the entire healthcare system — all from one modern web application.
-
-<br>
-
-![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react)
-![NodeJS](https://img.shields.io/badge/Node.js-22-339933?style=for-the-badge&logo=node.js)
-![Express](https://img.shields.io/badge/Express-black?style=for-the-badge&logo=express)
-![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb)
-![TailwindCSS](https://img.shields.io/badge/TailwindCSS-38BDF8?style=for-the-badge&logo=tailwind-css)
-![JWT](https://img.shields.io/badge/JWT-Authentication-orange?style=for-the-badge)
-![Cloudinary](https://img.shields.io/badge/Cloudinary-Media-blue?style=for-the-badge)
-![Razorpay](https://img.shields.io/badge/Razorpay-Payments-02042B?style=for-the-badge&logo=razorpay)
-
-</div>
+DocConnect is a secure, full-stack hospital appointment management platform featuring role-based workflows for **patients**, **doctors**, and **administrators**. Powered by **Node.js, Express, MySQL (Sequelize ORM), React, and Tailwind CSS**, the platform incorporates AI-driven symptom evaluation, calendar synchronization, and automated email reminder scheduling.
 
 ---
 
-# 📖 Table of Contents
-
-- About DocConnect
-- Features
-- Project Modules
-- Technology Stack
-- Screenshots
-- Project Structure
-- Installation
-- Environment Variables
-- Running the Project
-- API Overview
-- Security
-- Future Improvements
-- Deployment
-- Contributing
-- License
+## 📖 Table of Contents
+- [Project Architecture](#-project-architecture)
+- [Database Schema (MySQL / Sequelize)](#-database-schema-mysql--sequelize)
+- [LLM Integration & Prompts](#-llm-integration--prompts)
+- [API Documentation](#-api-documentation)
+- [Google Calendar OAuth 2.0 Setup Steps](#-google-calendar-oauth-20-setup-steps)
+- [Setup & Installation Guide](#-setup--installation-guide)
+- [Background Scheduler & Reminders](#-background-scheduler--reminders)
 
 ---
 
-# 🩺 About DocConnect
+## 🏗 Project Architecture
 
-DocConnect is a **full-stack healthcare appointment and hospital management platform** designed to simplify interactions between **patients, doctors, and hospital administrators**.
+DocConnect is engineered as a decoupled, multi-tier system with three core applications communicating with a single database engine:
 
-The platform provides an intuitive experience for patients to discover specialists, schedule appointments based on doctor availability, securely complete online payments, and manage upcoming consultations.
-
-Doctors receive their own dedicated dashboard where they can manage appointments, monitor earnings, update availability, and maintain their professional profiles.
-
-Administrators have complete control over the platform through a centralized dashboard, allowing them to manage doctors, monitor appointments, oversee hospital operations, and maintain the overall healthcare ecosystem.
-
-The project demonstrates the implementation of a scalable MERN architecture with secure authentication, payment gateway integration, cloud-based media storage, and role-based authorization.
-
----
-
-# ✨ Key Features
-
-## 👨‍⚕️ Patient Module
-
-- Secure user authentication
-- Register and Login
-- Browse all available doctors
-- Search doctors by speciality
-- View detailed doctor profiles
-- Book appointments based on available slots
-- Online appointment payment using Razorpay
-- Cancel appointments
-- View upcoming appointments
-- Appointment history
-- Update personal profile
-
----
-
-## 🩺 Doctor Module
-
-Doctors have a dedicated dashboard where they can:
-
-- Secure login
-- View dashboard analytics
-- Manage appointment schedule
-- View patient details
-- Accept and complete appointments
-- Track total earnings
-- Update profile information
-- Manage availability status
-
----
-
-## 🏥 Admin Module
-
-The administrator has complete control over the platform.
-
-Features include:
-
-- Secure Admin Login
-- Dashboard analytics
-- View all appointments
-- Manage doctors
-- Add new doctors
-- Enable/Disable doctor availability
-- Monitor platform statistics
-- View latest bookings
-- Hospital management dashboard
-
----
-
-# 🚀 Highlights
-
-✔ Three Separate Dashboards
-
-- Patient Portal
-- Doctor Dashboard
-- Admin Dashboard
-
-✔ Secure Authentication
-
-- JWT Authentication
-- Protected Routes
-- Role-based Authorization
-
-✔ Payment Integration
-
-- Razorpay Integration
-- Secure Online Payments
-
-✔ Cloud Storage
-
-- Cloudinary Image Upload
-- Doctor Profile Images
-
-✔ Responsive Design
-
-- Mobile Friendly
-- Tablet Friendly
-- Desktop Optimized
-
-✔ Modern UI
-
-- React
-- Tailwind CSS
-- Responsive Components
-
----
-
-# 💻 Technology Stack
-
-## Frontend
-
-- React.js
-- React Router DOM
-- Axios
-- Tailwind CSS
-- Context API
-
----
-
-## Backend
-
-- Node.js
-- Express.js
-- JWT Authentication
-- Bcrypt
-- Multer
-
----
-
-## Database
-
-- MongoDB Atlas
-- Mongoose ODM
-
----
-
-## Cloud & Services
-
-- Cloudinary
-- Razorpay
-- Render
-
----
-
-# 🎯 User Roles
-
-| Role | Access |
-|------|--------|
-| 👤 Patient | Book appointments, payments, profile management |
-| 👨‍⚕️ Doctor | Appointment management, earnings, availability |
-| 🏥 Admin | Doctors management, appointments, analytics |
-
----
-
-# 📸 Application Screenshots
-
-## 🏠 Home Page
-
-Displays featured doctors, medical specialities, and provides quick navigation for booking appointments.
-
-![alt text](screenshots/home.png)
-
----
-
-## 👨‍⚕️ Doctor Profile
-
-Patients can view doctor information, experience, consultation fees, and available booking slots before scheduling an appointment.
-
-![alt text](screenshots/docprofile.png)
-
----
-
-## 📅 My Appointments
-
-Users can view upcoming appointments, cancel bookings, and complete online payments.
-
-![alt text](screenshots/appointments.png)
-
----
-
-## 👨‍⚕️ Doctor Dashboard
-
-Doctors can monitor appointments, earnings, patient statistics, and recent bookings.
-
-![alt text](screenshots/docdash.png)
-
----
-
-## 🏥 Admin Dashboard
-
-Administrators can manage doctors, appointments, and monitor hospital-wide analytics.
-
-![alt text](screenshots/admindash.png)
-
----
-
-## 📋 Appointments Management
-
-Complete appointment management panel for administrators.
-
-![alt text](screenshots/docapp.png)
-
-
- 
----
-
-
-# 📁 Project Structure
-
-The project is organized into three independent applications that work together.
-
+### 1. File Structure Tree
 ```text
 DocConnect/
+├── Backend/                       # REST API & Worker Engine (Express + Sequelize)
+│   ├── config/                    
+│   │   ├── cloudinary.js          # Cloudinary Media Storage configuration
+│   │   ├── emailService.js        # Nodemailer connection & dispatch helper
+│   │   ├── gemini.js              # Groq & Gemini generative AI client wrappers
+│   │   ├── googleCalendar.js      # Google Calendar Event integration services
+│   │   ├── reminderWorker.js      # Background medication scheduler & email processor
+│   │   └── sequelize.js           # MySQL connection pool & Sequelize instance
+│   ├── controllers/               
+│   │   ├── adminController.js     # Admin dashboards, doctor updates & deletions
+│   │   ├── doctorController.js    # Provider notes, appointments & dashboard statistics
+│   │   └── userController.js      # Patient registration, booking, and profile actions
+│   ├── middleware/                
+│   │   ├── authAdmin.js           # Guard validating Admin JWT
+│   │   ├── authDoctor.js          # Guard validating Doctor JWT
+│   │   ├── authUser.js            # Guard validating Patient JWT
+│   │   └── multer.js              # Multipart/form-data upload handler
+│   ├── models/                    
+│   │   ├── userModel.js           # Patient table schema
+│   │   ├── doctorModel.js         # Doctor table schema
+│   │   ├── appointmentModel.js    # Appointment table schema
+│   │   └── emailQueueModel.js     # Transactional email outbox table schema
+│   ├── routes/                    
+│   │   ├── adminRoute.js          # Express admin endpoints
+│   │   ├── doctorRoute.js         # Express doctor endpoints
+│   │   └── userRoute.js           # Express patient endpoints
+│   └── server.js                  # Primary entry point (ports, syncing, workers)
 │
-├── admin/                 # Admin Dashboard
-│   ├── public/
+├── frontend/                      # Patient Portal Interface (Vite + React)
 │   ├── src/
-│   ├── package.json
-│   └── ...
+│   │   ├── assets/                # Design assets and illustrations
+│   │   ├── components/            # Shared components (Header, Banner, Navbar, Footer)
+│   │   ├── context/               # Global AppContext managing state
+│   │   ├── pages/                 
+│   │   │   ├── Home.jsx           # Landing interface
+│   │   │   ├── Doctors.jsx        # Speciality searches & lists
+│   │   │   ├── Appointment.jsx    # Slots booking & symptom forms
+│   │   │   ├── Login.jsx          # Secure user registration/sign-in
+│   │   │   ├── MyAppointments.jsx # Booking history & AI assessments
+│   │   │   └── MyProfile.jsx      # Patient profile adjustments
+│   │   └── App.jsx                # Patient routing
 │
-├── backend/               # Express Backend
-│   ├── config/
-│   ├── controllers/
-│   ├── middleware/
-│   ├── models/
-│   ├── routes/
-│   ├── uploads/
-│   ├── server.js
-│   └── ...
-│
-├── frontend/              # Patient Website
-│   ├── public/
-│   ├── src/
-│   ├── assets/
-│   ├── components/
-│   ├── pages/
-│   ├── context/
-│   └── ...
-│
-├── README.md
-└── package.json
+└── admin/                         # Operations Portal for Admins & Doctors (Vite + React)
+    ├── src/
+    │   ├── components/            # Sidebar navigation & Top-Bar headers
+    │   ├── context/               
+    │   │   ├── AdminContext.jsx   # Global Admin operations (Add/Delete Doctor, stats)
+    │   │   └── DoctorContext.jsx  # Global Doctor operations (Accept/Cancel, notes)
+    │   └── pages/                 
+    │       ├── Login.jsx          # Consolidated portal auth screen
+    │       ├── Admin/             
+    │       │   ├── AddDoctor.jsx  # Doctor creation form
+    │       │   ├── Dashboard.jsx  # Operational dashboards
+    │       │   ├── DoctorsList.jsx# Profile updates & custom deletion overlays
+    │       │   └── AllAppointments.jsx # Operations wide monitoring
+    │       └── Doctor/            
+    │           ├── DoctorAppointment.jsx # Clinical queue management
+    │           ├── DoctorDashboard.jsx   # Practice summaries & earnings
+    │           └── DoctorProfile.jsx     # Office configurations
 ```
 
 ---
 
-# 🏗 System Architecture
+### 2. Tiered Components
+*   **Database Tier:** Governed by **Sequelize ORM** mapping definitions to a MySQL engine. Enforces data integrity through foreign relations and atomic locking mechanics.
+*   **Application Server Tier:** Run on **Express.js**, acting as an API gateway. Coordinates request validations, executes transactional service scripts, and schedules background cron routines.
+*   **Client Presentation Tier:** Contains two separate **React Single Page Applications** compiled with Vite and styled using custom CSS and Tailwind utility layers:
+    *   **Patient Website (`/frontend`):** Focuses on user-friendly specialist filtering, booking forms, profile editing, and AI clinical report rendering.
+    *   **Operations Portal (`/admin`):** Dynamically mounts specific layouts depending on login role (Admin vs Doctor) to protect access control limits.
 
+---
+
+### 3. Integrated System Lifecycles & Data Flow
+
+#### A. Appointment Booking & LLM Evaluation
 ```text
-                        ┌─────────────────────┐
-                        │     React Client    │
-                        │ (Patient Frontend)  │
-                        └──────────┬──────────┘
-                                   │
-                                   │ REST API
-                                   │
-                ┌──────────────────▼──────────────────┐
-                │         Express.js Backend          │
-                │                                     │
-                │ JWT Authentication                  │
-                │ Appointment Management              │
-                │ Doctor Management                   │
-                │ Payment Integration                 │
-                └───────┬───────────────┬─────────────┘
-                        │               │
-                        │               │
-               ┌────────▼──────┐   ┌────▼───────────┐
-               │ MongoDB Atlas │   │   Cloudinary   │
-               │               │   │ Image Storage  │
-               └───────────────┘   └────────────────┘
-                        │
-                        │
-                 ┌──────▼───────┐
-                 │   Razorpay   │
-                 │   Payments   │
-                 └──────────────┘
+[Patient Client] -> submits slot selection & symptom description
+      │
+      ▼
+[Express Router] -> triggers `authUser` verification guard
+      │
+      ▼
+[User Controller] -> executes Database transaction (concurrency locked)
+      │
+      ├─► [Groq/Gemini Client] -> analyzes symptoms & urgency
+      ├─► [Google Calendar API] -> spawns event using patient OAuth
+      └─► [Email Queue Table] -> registers patient/doctor confirmation cards
+      │
+      ▼
+[MySQL Engine] -> updates slots_booked mappings & writes appointment details
+```
+
+#### B. Provider Leave Management & Patient Cancel Notifications
+```text
+[Admin Client] -> defines specific Leave Days for a doctor
+      │
+      ▼
+[Express Router] -> verifies admin privilege guard
+      │
+      ▼
+[Admin Controller] -> queries conflicting appointments on leave days
+      │
+      ├─► Cancel Appointments in DB
+      ├─► Releases doctor's slots_booked parameters
+      ├─► Calls Google Calendar API to delete events
+      └─► Queues cancellation notification emails to patients
+```
+
+#### C. Post-Visit Prescription & Intake Scheduler
+```text
+[Doctor Client] -> submits clinical visit notes & drug list
+      │
+      ▼
+[Doctor Controller] -> invokes `generatePostVisitSummary` LLM utility
+      │
+      ├─► Converts clinical prescriptions into simplified daily guides
+      ├─► Queues visit summary email for patient
+      └─► Saves notes, prescriptions, and AI summaries to DB
+      │
+      ▼
+[Background Workers] -> polls DB every 5 minutes:
+      │
+      └─► Compares frequency intervals (e.g. 12hr, 8hr) and dispatches reminder cards
 ```
 
 ---
 
-# ⚙ Installation
-
-Clone the repository.
-
-```bash
-git clone https://github.com/ChintuKadian/DocConnect.git
-```
-
-Move inside the project.
-
-```bash
-cd DocConnect
-```
+### 4. Role-Based Access Control & Route Guarding
+Authentication tokens (JWTs) are issued with specific secret payload claims on user login. Express routers verify permissions before routing to controller scripts:
+*   `authUser.js`: Inspects `token` header parameter to identify patient request details.
+*   `authDoctor.js`: Inspects `dToken` header parameter validating doctor credentials.
+*   `authAdmin.js`: Inspects `aToken` header parameter validating admin secret claims.
 
 ---
 
-## Install Frontend
+## 🗄 Database Schema (MySQL / Sequelize)
 
+The platform is backed by a relational MySQL database structured using **Sequelize ORM** models:
+
+### 1. `User` Schema
+Tracks patient accounts, credentials, and Google OAuth tokens.
+*   `_id` (String, Primary Key): Unique patient UUID.
+*   `name` (String, Required): Full name.
+*   `email` (String, Required, Unique): Email address.
+*   `password` (String, Required): Hashed password.
+*   `image` (Text, Optional): Cloudinary hosted profile image URL.
+*   `address` (JSON, Default: `{ line1: " ", line2: " " }`): Physical address.
+*   `gender` (String, Default: `"Not Selected"`): Patient gender.
+*   `dob` (String, Default: `"Not Selected"`): Date of birth.
+*   `phone` (String, Default: `"000000000"`): Contact number.
+*   `googleTokens` (JSON, Default: `null`): Stored Google OAuth refresh and access tokens.
+
+### 2. `Doctor` Schema
+Stores provider details, slot schedules, and leave parameters.
+*   `_id` (String, Primary Key): Unique doctor UUID.
+*   `name` (String, Required): Professional name.
+*   `email` (String, Required, Unique): Email address.
+*   `password` (String, Required): Hashed password.
+*   `image` (Text, Required): Cloudinary hosted profile image URL.
+*   `speciality` (String, Required): Area of expertise.
+*   `degree` (String, Required): Educational credentials.
+*   `experience` (String, Required): Years of practice.
+*   `about` (Text, Required): Professional summary.
+*   `available` (Boolean, Default: `true`): Availability toggle.
+*   `fees` (Double, Required): Consultation cost.
+*   `address` (JSON, Required): Clinic address info.
+*   `slots_booked` (JSON, Default: `{}`): Map of booked timeslots grouped by date (e.g. `{"2026_08_25": ["10:00 AM", "11:30 AM"]}`).
+*   `workingHours` (JSON, Default: `{ start: "09:00", end: "17:00" }`): Operational working hours.
+*   `slotDuration` (Integer, Default: `30`): Consultation slot length in minutes.
+*   `leaveDays` (JSON, Default: `[]`): Array of dates when the doctor is on leave.
+
+### 3. `Appointment` Schema
+Connects patients and doctors, tracking clinical details and assessments.
+*   `_id` (String, Primary Key): Unique appointment UUID.
+*   `userId` (String, Required): Reference ID of the patient.
+*   `docId` (String, Required): Reference ID of the doctor.
+*   `slotDate` (String, Required): Scheduled date (`YYYY_MM_DD`).
+*   `slotTime` (String, Required): Scheduled time (`HH:MM AM/PM`).
+*   `userData` (JSON, Required): Snapshot of user details at booking.
+*   `docData` (JSON, Required): Snapshot of doctor details at booking.
+*   `amount` (Double, Required): Final amount charged.
+*   `date` (BigInt, Required): Timestamp of booking.
+*   `cancelled` (Boolean, Default: `false`): Cancellation status.
+*   `payment` (Boolean, Default: `false`): Payment confirmation flag.
+*   `isCompleted` (Boolean, Default: `false`): Visit completion flag.
+*   `symptoms` (Text, Optional): Symptoms described by patient at booking.
+*   `preVisitSummary` (JSON, Default: `null`): Stored AI pre-visit urgency assessment.
+*   `notes` (Text, Optional): Notes submitted by doctor post-visit.
+*   `prescription` (JSON, Default: `[]`): List of prescribed medications.
+*   `postVisitSummary` (Text, Optional): Patient-friendly AI post-visit translation summary.
+*   `googleCalendarEventId` (String, Default: `""`): Google Calendar event identifier.
+*   `lastReminderSent` (Date, Default: `null`): Log timestamp of the last sent medication reminder.
+
+### 4. `EmailQueue` Schema
+Manages transactional outbound emails.
+*   `_id` (String, Primary key): Queue identifier.
+*   `to` (String, Required): Destination email.
+*   `subject` (String, Required): Subject line.
+*   `html` (Text, Required): Rich HTML email body.
+*   `status` (Enum, Default: `"pending"`): Current state (`pending`, `sent`, `failed`).
+*   `attempts` (Integer, Default: `0`): Retry attempts.
+*   `lastError` (Text, Optional): Diagnostics message on failed attempts.
+*   `createdAt` (Date, Default: `NOW`): Queue insertion time.
+
+---
+
+## 🤖 LLM Integration & Prompts
+
+DocConnect relies on Groq and Gemini clients, built with robust try-catch fallbacks to handle rate limitings or network dropouts gracefully.
+
+### 1. Pre-Visit Symptom Summary
+*   **Trigger:** Executed during appointment booking.
+*   **Goal:** Formulates a quick summary and risk-assessment for the doctor.
+*   **Prompt Specification:**
+    ```text
+    Analyse these symptoms and return a JSON object with keys: "urgency" (Low, Medium, or High), "chiefComplaint" (a short summary string), and "suggestedQuestions" (an array of exactly 3 suggested questions for the doctor). Return ONLY valid raw JSON without markdown code fences.
+    Symptoms: <symptoms>
+    ```
+
+### 2. Post-Visit Translation Summary
+*   **Trigger:** Executed when doctor completes the visit.
+*   **Goal:** Translates complex clinical jargon into readable directions for the patient.
+*   **Prompt Specification:**
+    ```text
+    Convert these clinical notes and prescription into a patient-friendly summary with medication schedule and follow-up steps. Keep it warm, clear, and easy to read.
+    Notes: <notes>
+    Prescription details: <prescriptionStr>
+    ```
+
+---
+
+## 📡 API Documentation
+
+### Patient Routes (`/api/user`)
+*   `POST /register` - Registers new patient accounts.
+*   `POST /login` - Logs in patients, returns JWT access token.
+*   `POST /book-appointment` - Allocates a slot atomically using Sequelize transactions.
+*   `POST /cancel-appointment` - Cancels booking, releases the time slot immediately.
+*   `GET /appointments` - List patient appointments.
+*   `GET /google-auth` - Initiates Google OAuth consent screen for calendar syncing.
+*   `GET /google-callback` - Handles OAuth redirect token exchange.
+
+### Doctor Routes (`/api/doctor`)
+*   `POST /login` - Doctor authentication.
+*   `GET /appointments` - List bookings assigned to doctor.
+*   `POST /complete-appointment` - Submits clinical notes, prescription; generates AI post-visit summary.
+*   `POST /cancel-appointment` - Doctor-side cancellation.
+*   `GET /dashboard` - Provider analytics and recent visits.
+
+### Admin Routes (`/api/admin`)
+*   `POST /login` - Admin authentication.
+*   `POST /add-doctor` - Creates doctor profile, uploads avatar to Cloudinary.
+*   `POST /update-doctor` - Modifies profile properties (schedules, leaves) and processes notifications for leave conflicts.
+*   `POST /delete-doctor` - Removes doctor profile and deletes corresponding file on Cloudinary.
+*   `POST /change-availability` - Toggles doctor active state.
+*   `GET /appointments` - List all appointments.
+*   `POST /cancel-appointment` - Admin-side cancellation.
+*   `GET /dashboard` - Core platform analytics.
+
+---
+
+## 📅 Google Calendar OAuth 2.0 Setup Steps
+
+1.  **Google Cloud Console Setup:**
+    *   Create a project in the [Google Cloud Console](https://console.cloud.google.com/).
+    *   Go to **APIs & Services > Library**, search for and enable **Google Calendar API**.
+2.  **Configure OAuth Consent Screen:**
+    *   Go to **OAuth Consent Screen** tab. Select **External**.
+    *   Add your developer contact details.
+    *   In the **Scopes** step, add `/auth/calendar.events` (Read/write access to calendar events).
+    *   Under **Test Users**, add your test gmail address.
+3.  **Create Credentials:**
+    *   Go to **APIs & Services > Credentials** and click **Create Credentials > OAuth Client ID**.
+    *   Choose **Web Application** as application type.
+    *   Add **Authorized JavaScript origins**: `http://localhost:4000` (or your domain).
+    *   Add **Authorized redirect URIs**: `http://localhost:4000/api/user/google-callback`.
+4.  **Save Client Details:**
+    *   Copy the generated `Client ID` and `Client Secret` values to your `Backend/.env` configuration.
+
+---
+
+## ⚙ Setup & Installation Guide
+
+### Prerequisites
+*   Node.js (v18+)
+*   MySQL Server (v8.0+)
+*   Cloudinary Account
+
+### 1. Configure Databases
+Create a MySQL database:
+```sql
+CREATE DATABASE docconnect;
+```
+
+### 2. Configure Environment Files
+Create `.env` files in respective directory paths based on the `.env.example` configurations:
+*   [Backend/.env.example](file:///d:/Project/Healthcare/DocConnect/Backend/.env.example)
+*   [frontend/.env.example](file:///d:/Project/Healthcare/DocConnect/frontend/.env.example)
+*   [admin/.env.example](file:///d:/Project/Healthcare/DocConnect/admin/.env.example)
+
+### 3. Install & Start Applications
+
+#### Backend Startup
 ```bash
-cd frontend
+cd Backend
 npm install
+npm run server    # Runs via nodemon (watches file modifications)
 ```
 
----
-
-## Install Backend
-
+#### Patient Frontend Startup
 ```bash
-cd ../Backend
+cd ../frontend
 npm install
+npm run dev       # Launches patient portal on http://localhost:5173
 ```
 
----
-
-## Install Admin Panel
-
+#### Admin/Doctor Client Startup
 ```bash
 cd ../admin
 npm install
+npm run dev       # Launches dashboard portal on http://localhost:5174
 ```
 
 ---
 
-# 🔑 Environment Variables
+## ⏰ Background Scheduler & Reminders
 
-Create a `.env` file inside the **backend** folder.
+A scheduler starts alongside the backend service via [reminderWorker.js](file:///d:/Project/Healthcare/DocConnect/Backend/config/reminderWorker.js). It registers two interval workers:
 
-```env
-PORT=4000
-
-MONGODB_URI=
-
-JWT_SECRET=
-
-ADMIN_EMAIL=
-
-ADMIN_PASSWORD=
-
-CLOUDINARY_NAME=
-
-CLOUDINARY_API_KEY=
-
-CLOUDINARY_SECRET=
-
-RAZORPAY_KEY_ID=
-
-RAZORPAY_SECRET=
-
-CURRENCY=USD
-```
-
- 
-
----
-
-# ▶ Running the Project
-
-### Start Backend
-
-```bash
-cd backend
-npm run server
-```
-
----
-
-### Start Frontend
-
-```bash
-cd frontend
-npm run dev
-```
-
----
-
-### Start Admin Panel
-
-```bash
-cd admin
-npm run dev
-```
-
----
-
-The applications will be available at
-
-```text
-Frontend : http://localhost:5173
-
-Backend  : http://localhost:4000
-
-Admin    : http://localhost:5174
-```
-
----
-
-# 🔄 Workflow
-
-```text
-Patient
-   │
-   ▼
-Login/Register
-   │
-   ▼
-Browse Doctors
-   │
-   ▼
-Select Doctor
-   │
-   ▼
-Choose Available Slot
-   │
-   ▼
-Book Appointment
-   │
-   ▼
-Online Payment
-   │
-   ▼
-Appointment Confirmed
-```
-
----
-
-# 🔐 Authentication Flow
-
-```text
-User Login
-     │
-     ▼
-JWT Generated
-     │
-     ▼
-Stored on Client
-     │
-     ▼
-Attached to Every API Request
-     │
-     ▼
-Backend Middleware Verification
-     │
-     ▼
-Access Granted
-```
-
----
-
-# 📡 Core Functionalities
-
-### Patient
-
-- Register/Login
-- Browse doctors
-- Search by speciality
-- View doctor profile
-- Book appointment
-- Cancel appointment
-- Pay online
-- View appointment history
-
----
-
-### Doctor
-
-- Login
-- Dashboard
-- Appointment Management
-- Earnings Overview
-- Availability Toggle
-- Profile Update
-
----
-
-### Admin
-
-- Login
-- Dashboard Analytics
-- Add Doctors
-- View Doctors
-- Manage Appointments
-- Manage Doctor Availability
-
----
-
-# 📦 Major Dependencies
-
-## Frontend
-
-```json
-React
-React Router DOM
-Axios
-Tailwind CSS
-```
-
----
-
-## Backend
-
-```json
-Express
-Mongoose
-JWT
-bcrypt
-multer
-cors
-dotenv
-validator
-```
-
----
-
-## Third-Party Services
-
-| Service | Purpose |
-|----------|----------|
-| MongoDB Atlas | Database |
-| Cloudinary | Image Hosting |
-| Razorpay | Online Payments |
-| Render | Deployment |
-
----
-
-# 🚀 Deployment
-
-The project can be deployed to cloud hosting platforms such as Render, AWS, or Heroku.
-
----
-
-# 🔒 Security Features
-
-- JWT Authentication
-- Password Hashing using bcrypt
-- Protected API Routes
-- Role-Based Authorization
-- Secure Payment Gateway Integration
-- Environment Variable Protection
-- Input Validation
-- MongoDB Injection Prevention
-- CORS Configuration
-
----
-
-# 🌟 Project Highlights
-
-DocConnect is designed with scalability, security, and user experience in mind. The application separates responsibilities across three dedicated portals, ensuring each user role has a streamlined workflow.
-
-### ✔ Patients
-
-- Register and securely log in
-- Browse doctors by specialization
-- View doctor profiles and consultation fees
-- Book appointments based on availability
-- Pay consultation fees online
-- Cancel appointments
-- View appointment history
-- Manage profile information
-
-### ✔ Doctors
-
-- Dedicated dashboard
-- View upcoming appointments
-- Manage appointment status
-- Track earnings
-- Update profile details
-- Toggle availability
-- Access patient information
-
-### ✔ Administrators
-
-- Dedicated admin dashboard
-- Add new doctors
-- Manage doctor availability
-- View all appointments
-- Monitor platform statistics
-- Manage hospital operations
-- Access analytics and booking history
-
----
-
-# 📈 Future Enhancements
-
-The following features are planned for future releases.
-
-### 🤖 AI Features
-
-- AI-powered symptom checker
-- AI chatbot for appointment assistance
-- Medical report summarization
-- AI-based doctor recommendation
-- Intelligent appointment scheduling
-
----
-
-### 📹 Telemedicine
-
-- Video consultations using WebRTC
-- Voice consultations
-- Screen sharing
-- Live chat between doctor and patient
-
----
-
-### 📅 Appointment Improvements
-
-- Google Calendar integration
-- Email reminders
-- SMS notifications
-- Appointment rescheduling
-- Waiting list management
-
----
-
-### 💳 Payment Enhancements
-
-- Stripe integration
-- UPI support 
-- Invoice generation
-- Payment history dashboard
-
----
-
-### 📊 Analytics
-
-- Appointment trends
-- Revenue analytics
-- Doctor performance reports
-- Patient statistics
-- Hospital insights dashboard
-
----
-
-### 🔒 Security
-
-- Two-factor authentication (2FA)
-- Rate limiting
-- Audit logs
-- Refresh token authentication
-- Session management
-- Activity tracking
-
----
-
-# 🎯 Learning Outcomes
-
-This project helped strengthen my understanding of:
-
-- Full Stack Web Development
-- REST API Design
-- MongoDB Data Modeling
-- Authentication using JWT
-- Role-Based Authorization
-- Cloudinary Integration
-- Payment Gateway Integration
-- Backend Architecture
-- State Management in React
-- Deployment using Render
-
----
-
-# 🚀 Performance Optimizations
-
-- Lazy loading components
-- Optimized API requests
-- Reusable React components
-- Efficient MongoDB queries
-- Image optimization using Cloudinary
-- Modular backend architecture
-
----
-
-# 🧪 Testing Checklist
-
-### Patient
-
-- User Registration
-- Login
-- Doctor Search
-- Appointment Booking
-- Online Payment
-- Appointment Cancellation
-
-### Doctor
-
-- Login
-- Dashboard
-- Availability Toggle
-- Appointment Management
-- Earnings
-
-### Admin
-
-- Login
-- Dashboard
-- Add Doctor
-- Manage Doctors
-- View Appointments
-- Analytics
-
----
-
-
-# 📝 License
-
-This project is licensed under the MIT License.
-
-Feel free to use, modify, and distribute this project for educational and personal purposes.
-
----
-
-# 👨‍💻 Author
-
-## Chintu Kadian
-
-- 🎓 B.Tech CSE
-- 💼 Full Stack Web Developer
-- GitHub: [ChintuKadian](https://github.com/ChintuKadian)
-
-
-
-
-
----
-
-<div align="center">
-
-## ❤️ Built with MERN Stack
-
-### Thank you for visiting DocConnect!
-
-If you like this project, consider giving it a ⭐ on GitHub.
-
-</div>
+1.  **Email Dispatch Queue:** Processes unsent email payloads from the `EmailQueue` table every **30 seconds**.
+2.  **Medication Intake Reminders:** Runs every **5 minutes**, querying completed prescriptions. It extracts dosage frequency instructions and emails patients reminder cards if the scheduled interval (e.g. 12 hours for twice daily, 8 hours for thrice daily) has elapsed.
