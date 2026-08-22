@@ -1,12 +1,25 @@
+import Groq from "groq-sdk";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const getGroqClient = () => {
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey || apiKey.startsWith("your_")) {
+        return null;
+    }
+    return new Groq({ apiKey });
+};
 
 const getGeminiClient = () => {
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-        console.warn("GEMINI_API_KEY is not defined. Using mock fallback mode for LLM generation.");
+    if (!apiKey || apiKey.startsWith("your_") || apiKey.startsWith("AQ.Ab8RN6Jd")) {
+        // Ignore invalid/placeholder keys
         return null;
     }
-    return new GoogleGenerativeAI(apiKey);
+    try {
+        return new GoogleGenerativeAI(apiKey);
+    } catch (e) {
+        return null;
+    }
 };
 
 /**
@@ -24,23 +37,44 @@ export const generatePreVisitSummary = async (symptoms) => {
         ]
     };
 
-    try {
-        const genAI = getGeminiClient();
-        if (!genAI) return fallback;
-
-        // Using gemini-1.5-flash as it is fast and efficient for text tasks
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-        const prompt = `Analyse these symptoms and return a JSON object with keys: "urgency" (Low, Medium, or High), "chiefComplaint" (a short summary string), and "suggestedQuestions" (an array of exactly 3 suggested questions for the doctor). Return ONLY valid raw JSON without markdown code fences.
+    // 1. Try Groq (Llama 3)
+    const groq = getGroqClient();
+    if (groq) {
+        try {
+            const prompt = `Analyse these symptoms and return a JSON object with keys: "urgency" (Low, Medium, or High), "chiefComplaint" (a short summary string), and "suggestedQuestions" (an array of exactly 3 suggested questions for the doctor). Return ONLY valid raw JSON without markdown code fences.
 Symptoms: ${symptoms}`;
 
-        const result = await model.generateContent(prompt);
-        const responseText = result.response.text().trim();
-        
-        // Clean markdown code blocks if the model outputs them
-        const cleanedText = responseText.replace(/```json/gi, "").replace(/```/g, "").trim();
-        
+            const chatCompletion = await groq.chat.completions.create({
+                messages: [{ role: "user", content: prompt }],
+                model: "openai/gpt-oss-20b",
+                response_format: { type: "json_object" }
+            });
+
+            const responseText = chatCompletion.choices[0].message.content.trim();
+            const parsed = JSON.parse(responseText);
+            if (parsed.urgency && parsed.chiefComplaint && Array.isArray(parsed.suggestedQuestions)) {
+                return {
+                    urgency: parsed.urgency,
+                    chiefComplaint: parsed.chiefComplaint,
+                    suggestedQuestions: parsed.suggestedQuestions.slice(0, 3)
+                };
+            }
+        } catch (error) {
+            console.error("Error in Groq generatePreVisitSummary:", error.message);
+        }
+    }
+
+    // 2. Try Gemini
+    const genAI = getGeminiClient();
+    if (genAI) {
         try {
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const prompt = `Analyse these symptoms and return a JSON object with keys: "urgency" (Low, Medium, or High), "chiefComplaint" (a short summary string), and "suggestedQuestions" (an array of exactly 3 suggested questions for the doctor). Return ONLY valid raw JSON without markdown code fences.
+Symptoms: ${symptoms}`;
+
+            const result = await model.generateContent(prompt);
+            const responseText = result.response.text().trim();
+            const cleanedText = responseText.replace(/```json/gi, "").replace(/```/g, "").trim();
             const parsed = JSON.parse(cleanedText);
             if (parsed.urgency && parsed.chiefComplaint && Array.isArray(parsed.suggestedQuestions)) {
                 return {
@@ -49,23 +83,12 @@ Symptoms: ${symptoms}`;
                     suggestedQuestions: parsed.suggestedQuestions.slice(0, 3)
                 };
             }
-        } catch (parseError) {
-            console.error("Failed to parse Gemini response as JSON. Raw response was:", responseText);
+        } catch (error) {
+            console.error("Error in Gemini generatePreVisitSummary:", error.message);
         }
-        
-        // RegEx fallback parsing if JSON parsing fails but text is there
-        const urgencyMatch = responseText.match(/urgency level\s*:\s*(Low|Medium|High)/i);
-        const urgency = urgencyMatch ? urgencyMatch[1] : "Medium";
-        return {
-            urgency,
-            chiefComplaint: symptoms.slice(0, 100),
-            suggestedQuestions: fallback.suggestedQuestions
-        };
-
-    } catch (error) {
-        console.error("Error in generatePreVisitSummary:", error.message);
-        return fallback;
     }
+
+    return fallback;
 };
 
 /**
@@ -81,20 +104,39 @@ Clinical Notes: ${notes}
 Medications: ${prescriptionStr}
 Please follow up as advised if symptoms persist.`;
 
-    try {
-        const genAI = getGeminiClient();
-        if (!genAI) return fallback;
-
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-        const prompt = `Convert these clinical notes and prescription into a patient-friendly summary with medication schedule and follow-up steps. Keep it warm, clear, and easy to read. 
+    // 1. Try Groq (Llama 3)
+    const groq = getGroqClient();
+    if (groq) {
+        try {
+            const prompt = `Convert these clinical notes and prescription into a patient-friendly summary with medication schedule and follow-up steps. Keep it warm, clear, and easy to read. 
 Notes: ${notes}
 Prescription details: ${prescriptionStr}`;
 
-        const result = await model.generateContent(prompt);
-        return result.response.text().trim();
-    } catch (error) {
-        console.error("Error in generatePostVisitSummary:", error.message);
-        return fallback;
+            const chatCompletion = await groq.chat.completions.create({
+                messages: [{ role: "user", content: prompt }],
+                model: "openai/gpt-oss-20b",
+            });
+            return chatCompletion.choices[0].message.content.trim();
+        } catch (error) {
+            console.error("Error in Groq generatePostVisitSummary:", error.message);
+        }
     }
+
+    // 2. Try Gemini
+    const genAI = getGeminiClient();
+    if (genAI) {
+        try {
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const prompt = `Convert these clinical notes and prescription into a patient-friendly summary with medication schedule and follow-up steps. Keep it warm, clear, and easy to read. 
+Notes: ${notes}
+Prescription details: ${prescriptionStr}`;
+
+            const result = await model.generateContent(prompt);
+            return result.response.text().trim();
+        } catch (error) {
+            console.error("Error in Gemini generatePostVisitSummary:", error.message);
+        }
+    }
+
+    return fallback;
 };
