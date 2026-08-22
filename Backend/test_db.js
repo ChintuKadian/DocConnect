@@ -5,10 +5,14 @@ import doctorModel from './models/doctorModel.js';
 import appointmentModel from './models/appointmentModel.js';
 import emailQueueModel from './models/emailQueueModel.js';
 
-console.log("Checking DB connection...");
+console.log("Checking DB connection & Syncing schemas...");
 sequelize.authenticate()
   .then(() => {
      console.log("Database Connected successfully!");
+     return sequelize.sync();
+  })
+  .then(() => {
+     console.log("Database tables synchronized/pushed successfully!");
      process.exit(0);
   })
   .catch(err => {
