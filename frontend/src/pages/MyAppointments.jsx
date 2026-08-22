@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
 const MyAppointments = () => {
-  const { backendUrl, token, getDoctorsData } = useContext(AppContext);
+  const { backendUrl, token, getDoctorsData, userData, loadUserProfileData } = useContext(AppContext);
 
   const navigate = useNavigate();
   const [appointments, setAppointments] = useState([]);
@@ -37,8 +37,9 @@ const MyAppointments = () => {
         headers: { token },
       });
       if (data.success) {
-        //get new appointment on the top so use reverse
-        setAppointments(data.appointments.reverse());
+        // filter out cancelled appointments so they disappear from list
+        const activeAppointments = data.appointments.filter(item => !item.cancelled);
+        setAppointments(activeAppointments.reverse());
         console.log(data.appointments);
       }
     } catch (error) {
@@ -85,54 +86,7 @@ const MyAppointments = () => {
     }
   };
 
-  const initPay = (order) => {
-    const options = {
-      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-      amount: order.amount,
-      currency: order.currency,
-      name: "Appointment Payment",
-      description: "Appointment Payment",
-      order_id: order.id,
-      receipt: order.receipt,
-      handler: async (response) => {
-        //handler is automatically called by razorpay
-        console.log(response);
-        // after completeing payement we get paymentId orderId and signature in response
-        try {
-          const { data } = await axios.post(
-            backendUrl + "/api/user/verifyRazorpay",
-            response,
-            { headers: { token } }
-          );
-          if (data.success) {
-            getUserAppointments();
-            navigate("/my-appointments");
-          }
-        } catch (error) {
-          console.log(error);
-          toast.error(error.message);
-        }
-      },
-    };
 
-    const rzp = new window.Razorpay(options);
-    rzp.open();
-  };
-
-  const appointmentRazorpay = async (appointmentId) => {
-    try {
-      const { data } = await axios.post(
-        backendUrl + "/api/user/payment-razorpay",
-        { appointmentId },
-        { headers: { token } }
-      );
-      // we get order object from respose which have name, amount, currency,id,amount_due etc in it
-      if (data.success) {
-        // console.log(data.order)
-        initPay(data.order);
-      }
-    } catch (error) {}
-  };
 
   // eact item of appointment array has docData,userData,slotDate, slotTime, check for more in models
 
@@ -147,9 +101,12 @@ const MyAppointments = () => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("googleAuth") === "success") {
       toast.success("Google Calendar Connected Successfully!");
+      if (token) {
+        loadUserProfileData();
+      }
       navigate("/my-appointments", { replace: true });
     }
-  }, []);
+  }, [token]);
 
   return (
     <div>
@@ -160,15 +117,27 @@ const MyAppointments = () => {
       {token && (
         <div className="bg-teal-50/40 border border-teal-100 rounded-2xl p-5 mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
-            <h3 className="text-teal-900 font-bold text-sm sm:text-base">Sync with Google Calendar</h3>
-            <p className="text-xs text-teal-700/80 mt-1">Get automatic schedule confirmations and reminders synced directly to your Google Calendar.</p>
+            <h3 className="text-teal-900 font-bold text-sm sm:text-base">
+              {userData && userData.googleTokens ? "Google Calendar Synced" : "Sync with Google Calendar"}
+            </h3>
+            <p className="text-xs text-teal-700/80 mt-1">
+              {userData && userData.googleTokens 
+                ? "Your appointments will automatically synchronize and update directly in your Google Calendar."
+                : "Get automatic schedule confirmations and reminders synced directly to your Google Calendar."}
+            </p>
           </div>
-          <button
-            onClick={connectGoogleCalendar}
-            className="bg-primary text-white text-xs font-semibold px-6 py-3 rounded-full hover:shadow-md transition-all active:scale-95 cursor-pointer shrink-0"
-          >
-            Connect Calendar
-          </button>
+          {userData && userData.googleTokens ? (
+            <div className="bg-teal-600 text-white text-xs font-semibold px-6 py-3 rounded-full flex items-center gap-2 shrink-0">
+              <span className="text-sm">✓</span> Connected
+            </div>
+          ) : (
+            <button
+              onClick={connectGoogleCalendar}
+              className="bg-primary text-white text-xs font-semibold px-6 py-3 rounded-full hover:shadow-md transition-all active:scale-95 cursor-pointer shrink-0"
+            >
+              Connect Calendar
+            </button>
+          )}
         </div>
       )}
 
@@ -220,6 +189,16 @@ const MyAppointments = () => {
                           Complaint: {item.preVisitSummary.chiefComplaint}
                         </span>
                       </div>
+                      {item.preVisitSummary.suggestedQuestions && item.preVisitSummary.suggestedQuestions.length > 0 && (
+                        <div className="mt-2.5 pl-1">
+                          <p className="text-[10px] font-bold text-zinc-450 uppercase tracking-wider">Suggested Questions to Ask:</p>
+                          <ul className="list-disc pl-4 text-xs text-zinc-500 mt-1 space-y-1">
+                            {item.preVisitSummary.suggestedQuestions.map((q, idx) => (
+                              <li key={idx} className="leading-relaxed">{q}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -253,19 +232,10 @@ const MyAppointments = () => {
             <div></div>
 
             <div className="flex flex-col gap-2 justify-end sm:justify-center">
-              {/* show the buttons only if appointment is there(not cancelled) */}
-              {!item.cancelled && item.payment && !item.isCompleted && (
-                <span className="sm:min-w-48 py-2.5 text-center text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-xl font-bold text-sm">
-                  Paid
+              {!item.cancelled && !item.isCompleted && (
+                <span className="sm:min-w-48 py-2.5 text-center text-teal-700 bg-teal-50 border border-teal-100 rounded-xl font-bold text-sm">
+                  Confirmed
                 </span>
-              )}
-              {!item.cancelled && !item.payment && !item.isCompleted && (
-                <button
-                  onClick={() => appointmentRazorpay(item._id)}
-                  className="text-sm text-teal-700 bg-teal-50/50 hover:bg-primary hover:text-white border border-teal-100 rounded-xl px-4 py-2.5 font-bold transition-all duration-200 active:scale-95 cursor-pointer text-center sm:min-w-48"
-                >
-                  Pay Online
-                </button>
               )}
 
               {!item.cancelled && !item.isCompleted && (
