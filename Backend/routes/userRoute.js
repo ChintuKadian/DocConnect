@@ -1,5 +1,5 @@
 import express from 'express';
-import { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, paymentRazorpay, verifyRazorpay, googleAuth, googleCallback } from '../controllers/userController.js';
+import { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, googleAuth, googleCallback } from '../controllers/userController.js';
 import authUser from '../middleware/authUser.js';
 import upload from '../middleware/multer.js';
 
@@ -12,8 +12,7 @@ userRouter.post("/update-profile", upload.single('image'), authUser, updateProfi
 userRouter.post('/book-appointment', authUser, bookAppointment)
 userRouter.get("/appointments", authUser, listAppointment)
 userRouter.post('/cancel-appointment', authUser, cancelAppointment)
-userRouter.post('/payment-razorpay', authUser, paymentRazorpay)
-userRouter.post('/verifyRazorpay', authUser, verifyRazorpay)
 userRouter.get('/google-auth', authUser, googleAuth)
+
 userRouter.get('/google-callback', googleCallback)
 export default userRouter

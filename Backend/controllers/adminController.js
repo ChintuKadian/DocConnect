@@ -123,13 +123,13 @@ const appointmentCancel = async (req, res) => {
         const { docId, slotDate, slotTime } = appointmentData
         const doctorData = await doctorModel.findByPk(docId)
 
-        let slots_booked = doctorData.slots_booked
-        slots_booked[slotDate] = slots_booked[slotDate].filter(e => e !== slotTime)
-
-        // Mark the json field modified
-        doctorData.slots_booked = slots_booked;
-        doctorData.changed('slots_booked', true);
-        await doctorData.save();
+        if (doctorData) {
+            let slots_booked = JSON.parse(JSON.stringify(doctorData.slots_booked || {}));
+            if (slots_booked[slotDate]) {
+                slots_booked[slotDate] = slots_booked[slotDate].filter(e => e !== slotTime);
+                await doctorModel.update({ slots_booked }, { where: { _id: docId } });
+            }
+        }
 
         res.json({ success: true, message: "Appointment Cancelled" })
     } catch (error) {
@@ -242,4 +242,54 @@ const updateDoctor = async (req, res) => {
     }
 }
 
-export { addDoctor, loginAdmin, allDoctors, appointmentAdmin, appointmentCancel, adminDashboard, updateDoctor }
+// helper function to extract public_id from Cloudinary URL
+const getPublicIdFromUrl = (url) => {
+    try {
+        const parts = url.split('/');
+        const filePart = parts[parts.length - 1];
+        const publicId = filePart.split('.')[0];
+        
+        const uploadIndex = parts.indexOf('upload');
+        if (uploadIndex !== -1 && parts.length > uploadIndex + 2) {
+            const pathParts = parts.slice(uploadIndex + 2);
+            const fullPath = pathParts.join('/');
+            return fullPath.split('.')[0];
+        }
+        return publicId;
+    } catch (e) {
+        console.error("Failed to parse Cloudinary public_id:", e);
+        return null;
+    }
+}
+
+// api to delete doctor
+const deleteDoctor = async (req, res) => {
+    try {
+        const { docId } = req.body;
+        const doctor = await doctorModel.findByPk(docId);
+        if (!doctor) {
+            return res.json({ success: false, message: "Doctor not found" });
+        }
+
+        // Delete profile picture from Cloudinary
+        if (doctor.image) {
+            const publicId = getPublicIdFromUrl(doctor.image);
+            if (publicId) {
+                console.log(`Deleting image from Cloudinary: ${publicId}`);
+                await cloudinary.uploader.destroy(publicId).catch(err => {
+                    console.error("Cloudinary image deletion failed:", err.message);
+                });
+            }
+        }
+
+        // Delete doctor record from database
+        await doctorModel.destroy({ where: { _id: docId } });
+
+        res.json({ success: true, message: "Doctor Deleted Successfully" });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+export { addDoctor, loginAdmin, allDoctors, appointmentCancel, adminDashboard, updateDoctor, deleteDoctor, appointmentAdmin }

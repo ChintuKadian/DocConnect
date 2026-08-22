@@ -5,7 +5,6 @@ import jwt from 'jsonwebtoken'
 import { v2 as cloudinary } from 'cloudinary'
 import doctorModel from '../models/doctorModel.js';
 import appointmentModel from '../models/appointmentModel.js';
-import razorpay from 'razorpay'
 import { generatePreVisitSummary } from '../config/gemini.js';
 import { queueEmail } from '../config/emailService.js';
 import { createCalendarEvent, deleteCalendarEvent, getGoogleAuthUrl, getTokensFromCode } from '../config/googleCalendar.js';
@@ -260,14 +259,14 @@ const cancelAppointment = async (req, res) => {
         const { docId, slotDate, slotTime, googleCalendarEventId } = appointmentData;
         const doctorData = await doctorModel.findByPk(docId);
 
-        let slots_booked = doctorData.slots_booked;
-        if (slots_booked[slotDate]) {
-            slots_booked[slotDate] = slots_booked[slotDate].filter(e => e !== slotTime);
-            
-            doctorData.slots_booked = slots_booked;
-            doctorData.changed('slots_booked', true);
-            await doctorData.save();
+        if (doctorData) {
+            let slots_booked = JSON.parse(JSON.stringify(doctorData.slots_booked || {}));
+            if (slots_booked[slotDate]) {
+                slots_booked[slotDate] = slots_booked[slotDate].filter(e => e !== slotTime);
+                await doctorModel.update({ slots_booked }, { where: { _id: docId } });
+            }
         }
+
 
         const userData = await userModel.findByPk(userId, { attributes: { exclude: ['password'] } });
 
@@ -299,59 +298,6 @@ const cancelAppointment = async (req, res) => {
     }
 }
 
-// api to make appointment payment using razorpay
-const razorpayInstance = new razorpay({
-    key_id: process.env.VITE_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID || 'rzp_test_mock',
-    key_secret: process.env.RAZORPAY_KEY_SECRET || 'rzp_secret_mock'
-})
-const paymentRazorpay = async (req, res) => {
-    try {
-
-        const { appointmentId } = req.body;
-        const appointmentData = await appointmentModel.findByPk(appointmentId)
-        if (!appointmentData || appointmentData.cancelled) {
-            return res.json({ success: false, message: "Appointment cancelled or not found" })
-
-        }
-        // creating options for razorpay payment
-        const options = {
-            amount: appointmentData.amount * 100,
-            currency: process.env.CURRENCY || 'INR',
-            receipt: appointmentId,
-        }
-        //we will get above options while verifying payment 
-
-        // creation of an order
-        const order = await razorpayInstance.orders.create(options)
-        res.json({ success: true, order })
-
-    } catch (error) {
-        console.log(error)
-        res.json({ success: false, message: error.message })
-    }
-}
-
-// api to verify razorpay payment
-const verifyRazorpay = async (req, res) => {
-    try {
-        const { razorpay_order_id } = req.body
-        const orderInfo = await razorpayInstance.orders.fetch(razorpay_order_id)
-        //orderInfo have various fields,  like amoount, it, recipt , status etc
-        // console.log(orderInfo)
-
-        //we are passing appointmetid as reciept, and we have to mark payment as true for that appointment
-        if(orderInfo.status==="paid"){
-            await appointmentModel.update({payment:true},{where:{_id:orderInfo.receipt}})
-            res.json({success:"true",message:"Payment Successful"})
-        }else{
-            res.json({success:"false",message:"Payment Failed"})
-        }
-
-    } catch (error) {
-        console.log(error)
-        res.json({ success: false, message: error.message })
-    }
-}
 
 const googleAuth = async (req, res) => {
     try {
@@ -396,4 +342,4 @@ const googleCallback = async (req, res) => {
     }
 }
 
-export { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, paymentRazorpay, verifyRazorpay, googleAuth, googleCallback }
+export { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, googleAuth, googleCallback }
